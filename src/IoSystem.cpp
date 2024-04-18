@@ -19,7 +19,6 @@ IoSystem::IoSystem()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
-#ifndef SINGLE_ONLY
     if (Option::Autorun)
     {
         std::lock_guard lock(mtx);
@@ -29,7 +28,6 @@ IoSystem::IoSystem()
             });
         }
     }
-#endif
 }
 
 IoSystem::~IoSystem()
@@ -88,11 +86,7 @@ DWORD IoSystem::worker() {
     }
     else
     {
-        if (context == nullptr)
-            return -1;
-
-        auto err = WSAGetLastError();
-        switch (err) {
+        switch (WSAGetLastError()) {
             case ERROR_OPERATION_ABORTED:
                 break;
             default:

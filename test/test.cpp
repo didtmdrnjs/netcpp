@@ -13,10 +13,11 @@ int main() {
             throw net::network_error("listen()");
 
         net::Context context;
-        context.completed = [sock](net::Context* context, bool success) {
+        context.completed = [=](net::Context* context, bool success) {
             std::cout << "CONNECTED\n";
             sock.accept(context);
         };
+        context.acceptSocket->create(net::Protocol::Tcp);
         if (!sock.accept(&context))
             throw net::network_error("accept()");
         getchar();
