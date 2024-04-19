@@ -53,7 +53,7 @@ void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
             break;
         case ContextType::Connect:
             if (isSuccess) {
-                if (!static_cast<Socket*>(context->token)->setSocketOption(OptionLevel::Socket, (OptionName) SO_UPDATE_CONNECT_CONTEXT,nullptr))
+                if (!static_cast<Socket*>(context->token)->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_CONNECT_CONTEXT, nullptr))
                     throw net::network_error("setSocketOption()");
             }
             context->completed(context, isSuccess);
@@ -86,7 +86,9 @@ DWORD IoSystem::worker() {
     }
     else
     {
-        switch (WSAGetLastError()) {
+        const auto err = WSAGetLastError();
+        switch (err) {
+            case WAIT_TIMEOUT:
             case ERROR_OPERATION_ABORTED:
                 break;
             default:

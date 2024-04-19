@@ -109,12 +109,12 @@ namespace net
 		{
 			if (_sock == INVALID_SOCKET)
 				return false;
-            return setsockopt(_sock,
+            return SOCKET_ERROR != setsockopt(_sock,
 				static_cast<int>(level),
 				static_cast<int>(name),
 				reinterpret_cast<const char*>(&value),
 				sizeof(T)
-			) == 0;
+			);
 		}
 
 		void setBlocking(bool isBlocking) const;
