@@ -19,7 +19,6 @@ IoSystem::IoSystem()
 {
 	_hcp = CreateIoCompletionPort(INVALID_HANDLE_VALUE, NULL, NULL, NULL);
 
-#ifndef SINGLE_ONLY
     if (Option::Autorun)
     {
         std::lock_guard lock(mtx);
@@ -29,7 +28,6 @@ IoSystem::IoSystem()
             });
         }
     }
-#endif
 }
 
 IoSystem::~IoSystem()
@@ -46,15 +44,17 @@ void IoSystem::push(SOCKET s)
 void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
     switch (context->_contextType) {
         case ContextType::Accept:
-            if(isSuccess) {
+            if (isSuccess) {
                 this->push(context->acceptSocket->getHandle());
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle());
+                if (!context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_ACCEPT_CONTEXT, _listeningSocket->getHandle()))
+                    throw net::network_error("setSocketOption()");
             }
             context->completed(context, isSuccess);
             break;
         case ContextType::Connect:
-            if(isSuccess) {
-                context->acceptSocket->setSocketOption(OptionLevel::Socket, (OptionName) SO_UPDATE_CONNECT_CONTEXT,nullptr);
+            if (isSuccess) {
+                if (!static_cast<Socket*>(context->token)->setSocketOption(OptionLevel::Socket, (OptionName)SO_UPDATE_CONNECT_CONTEXT, nullptr))
+                    throw net::network_error("setSocketOption()");
             }
             context->completed(context, isSuccess);
             break;
@@ -86,11 +86,9 @@ DWORD IoSystem::worker() {
     }
     else
     {
-        if (context == nullptr)
-            return -1;
-
-        auto err = WSAGetLastError();
+        const auto err = WSAGetLastError();
         switch (err) {
+            case WAIT_TIMEOUT:
             case ERROR_OPERATION_ABORTED:
                 break;
             default:

@@ -64,17 +64,13 @@ bool Socket::bind(Endpoint ep)
     setLocalEndpoint(ep);
 	IpAddress ipAdr = _localEndpoint->getAddress();
     const auto ret = ::bind(_sock, reinterpret_cast<SOCKADDR*>(&ipAdr), sizeof(SOCKADDR_IN));
-#ifndef SINGLE_ONLY
     IoSystem::instance().push(_sock);
-#endif
 	return SOCKET_ERROR != ret;
 }
 
 bool Socket::listen(int backlog) const
 {
-#ifndef SINGLE_ONLY
     IoSystem::instance()._listeningSocket = this;
-#endif
 	return SOCKET_ERROR != ::listen(_sock, backlog);
 }
 
@@ -117,15 +113,10 @@ net::Socket Socket::accept() const
 	return clientSock;
 }	
 
-#ifndef SINGLE_ONLY
-
 bool Socket::accept(Context *context) const {
     context->init();
 
     context->_contextType = ContextType::Accept;
-
-    if (context->acceptSocket == nullptr)
-        context->acceptSocket = std::make_unique<Socket>(Protocol::Tcp);
     IoSystem::instance().push(context->acceptSocket->getHandle());
 
     DWORD dwByte = 0;
@@ -146,6 +137,9 @@ bool Socket::connect(Context* context)
 
     bind(Endpoint(IpAddress::Any, 0));
     _remoteEndpoint = _localEndpoint;
+
+    context->token = static_cast<void*>(this);
+
 	IpAddress ipAdr = context->endpoint->getAddress();
 	DWORD dw;
 	if (!Native::ConnectEx(_sock,
@@ -217,8 +211,6 @@ bool net::Socket::disconnect(Context* context) const
     }
     return false;
 }
-
-#endif
 
 bool Socket::send(std::span<char> s) const
 {
@@ -310,14 +302,14 @@ Socket &Socket::operator=(const Socket& sock) {
     this->_sock = sock._sock;
     this->_localEndpoint = sock._localEndpoint;
     this->_remoteEndpoint = sock._remoteEndpoint;
-
+   
     return *this;
 }
 
 void Socket::create(Protocol pt) {
     auto type = SocketType::Stream;
     if(pt == Protocol::Udp) type = SocketType::Dgram;
-    _sock = ::socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
+    _sock = WSASocket(PF_INET, static_cast<int>(type), static_cast<int>(pt), nullptr, 0, WSA_FLAG_OVERLAPPED);
 }
 
 void Socket::BindEndpoint()

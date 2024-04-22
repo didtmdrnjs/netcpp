@@ -98,20 +98,18 @@ namespace net
 		int receive(std::span<char> s) const;
 		int receive(std::span<char> s, Endpoint target) const;
     public:
-#ifndef SINGLE_ONLY
         bool disconnect(Context* context) const;
         bool accept(Context *context) const;
         bool connect(Context* context);
         bool send(Context* context) const;
         bool receive(Context* context) const;
-#endif
     public:
 		template<class T>
-		int setSocketOption(OptionLevel level, OptionName name, T value) const
+		bool setSocketOption(OptionLevel level, OptionName name, T value) const
 		{
 			if (_sock == INVALID_SOCKET)
-				return -1;
-            return setsockopt(_sock,
+				return false;
+            return SOCKET_ERROR != setsockopt(_sock,
 				static_cast<int>(level),
 				static_cast<int>(name),
 				reinterpret_cast<const char*>(&value),
