@@ -32,6 +32,5 @@ namespace net
 	private:
 		HANDLE _hcp;
         const Socket* _listeningSocket;
-        std::mutex mtx;
 	};
 }

@@ -21,7 +21,6 @@ IoSystem::IoSystem()
 
     if (Option::Autorun)
     {
-        std::lock_guard lock(mtx);
         for (unsigned i = 0; i < Option::ThreadCount; ++i) {
             new std::thread([this] {
                 while (true) worker();
@@ -32,7 +31,6 @@ IoSystem::IoSystem()
 
 IoSystem::~IoSystem()
 {
-    CancelIo(_hcp);
 }
 
 void IoSystem::push(SOCKET s)
@@ -42,6 +40,8 @@ void IoSystem::push(SOCKET s)
 }
 
 void IoSystem::dispatch(Context* context, DWORD numOfBytes, bool isSuccess) {
+    if (!context)
+        return;
     switch (context->_contextType) {
         case ContextType::Accept:
             if (isSuccess) {
