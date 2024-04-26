@@ -12,13 +12,13 @@ int main() {
             return -1;
 
         auto context = new net::Context();
-        context->endpoint = net::Endpoint(net::IpAddress::Loopback, 8085);
-        context->completed = [](net::Context* context, bool isSuccess) {
-            if (isSuccess)
-                std::cout << "Connected!\n";
-            else
-                std::cout << "Failed\n";
-            exit(0);
+        context->endpoint = net::Endpoint(net::IpAddress::Loopback, 1225);
+        context->completed = [&](net::Context* context, bool isSuccess) {
+            std::string v = "hello";
+
+            auto ctx = new net::Context;
+            ctx->buffer = v;
+            sock.send(ctx);
         };
         if (!sock.connect(context))
             throw net::network_error("conn");

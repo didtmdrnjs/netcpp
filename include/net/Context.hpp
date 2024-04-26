@@ -27,7 +27,7 @@ namespace net
 		Context();
         ~Context();
     public:
-        Callback completed;
+        Callback completed = [](Context*, bool) {};
     public:
         std::unique_ptr<Socket> acceptSocket;
         std::optional<Endpoint> endpoint;

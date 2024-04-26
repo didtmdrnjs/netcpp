@@ -9,9 +9,15 @@ int main() {
     ctx.completed = [](Context*, bool) {
         std::cout << "Connected";
     };
-    ctx.endpoint = Endpoint(IpAddress::Loopback, 1225);
-    sock.connect(&ctx);
+    sock.bind(Endpoint(IpAddress::Loopback, 1225));
+    sock.listen();
 
-    while (true) { Sleep(1); }
+    while (true)
+    {
+        char buf[100] = "";
+        auto client = sock.accept();
+        client.receive(buf);
+        std::cout << buf << '\n';
+    }
     return 0;
 }

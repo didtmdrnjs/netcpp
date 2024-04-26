@@ -161,12 +161,11 @@ bool Socket::send(Context* context) const
 
     WSABUF wsaBuf;
     wsaBuf.buf = context->buffer.data();
-    wsaBuf.len = static_cast<int>(context->buffer.size());
+    wsaBuf.len = context->buffer.size();
 
-    DWORD sentBytes = 0, flags = 0;
     if (SOCKET_ERROR == WSASend(_sock,
                                 &wsaBuf, 1,
-                                &sentBytes, flags,
+                                &wsaBuf.len, 0,
                                 reinterpret_cast<LPOVERLAPPED>(context), nullptr)
             )
     {
@@ -309,7 +308,7 @@ Socket &Socket::operator=(const Socket& sock) {
 void Socket::create(Protocol pt) {
     auto type = SocketType::Stream;
     if(pt == Protocol::Udp) type = SocketType::Dgram;
-    _sock = WSASocket(PF_INET, static_cast<int>(type), static_cast<int>(pt), nullptr, 0, WSA_FLAG_OVERLAPPED);
+    _sock = socket(PF_INET, static_cast<int>(type), static_cast<int>(pt));
 }
 
 void Socket::BindEndpoint()
