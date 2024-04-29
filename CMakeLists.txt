@@ -1,4 +1,7 @@
-﻿cmake_minimum_required(VERSION 3.9)
+﻿cmake_minimum_required(VERSION 3.21)
+
+set(CMAKE_TOOLCHAIN_FILE "${CMAKE_CURRENT_SOURCE_DIR}/vcpkg/scripts/buildsystems/vcpkg.cmake"
+        CACHE STRING "Vcpkg toolchain file")
 
 project(netcpp VERSION 1.0.0 DESCRIPTION "C++ Network library.")
 set(CMAKE_CXX_STANDARD 20)
@@ -6,6 +9,8 @@ set(CMAKE_CXX_STANDARD 20)
 include_directories(include/net)
 
 add_library(netcpp STATIC)
+add_compile_definitions(NOMINMAX)
+find_package(TBB REQUIRED)
 
 target_sources(netcpp PRIVATE
         src/PCH.cpp
@@ -26,7 +31,10 @@ target_include_directories(netcpp
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 
-target_link_libraries(netcpp ws2_32)
+target_link_libraries(netcpp PUBLIC
+        TBB::tbb
+        ws2_32
+)
 
 target_precompile_headers(netcpp
         PRIVATE

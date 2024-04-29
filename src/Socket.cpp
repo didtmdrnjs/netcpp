@@ -158,13 +158,19 @@ bool Socket::send(Context* context) const
     context->init();
     context->_contextType = ContextType::Send;
 
-    WSABUF wsaBuf;
-    wsaBuf.buf = context->buffer.data();
-    wsaBuf.len = context->buffer.size();
+    std::vector<WSABUF> buffer;
+    for (const auto& buf : context->sendBuffer)
+    {
+        WSABUF wsaBuf;
+        wsaBuf.buf = buf.data();
+        wsaBuf.len = static_cast<ULONG>(buf.size());
+        buffer.push_back(wsaBuf);
+    }
 
+    DWORD len = 0;
     if (SOCKET_ERROR == WSASend(_sock,
-                                &wsaBuf, 1,
-                                &wsaBuf.len, 0,
+                                buffer.data(), static_cast<DWORD>(buffer.size()),
+                                &len, 0,
                                 reinterpret_cast<LPOVERLAPPED>(context), nullptr)
             )
     {

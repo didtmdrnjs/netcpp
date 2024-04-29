@@ -1,8 +1,11 @@
 #pragma once
 
+#include <tbb/concurrent_vector.h>
+
 #include <memory>
 #include <atomic>
 #include <functional>
+
 #include "Socket.hpp"
 
 namespace net
@@ -32,6 +35,7 @@ namespace net
         std::unique_ptr<Socket> acceptSocket;
         std::optional<Endpoint> endpoint;
         std::span<char> buffer {};
+        tbb::concurrent_vector<std::span<char>> sendBuffer;
         std::atomic<u_long> length = 0;
         void* token;
     private:
